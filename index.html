@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DOPA Case File : Internal Dossier</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.js"></script>
+  <script>
+    if (!window.omggif && !window.GifReader) {
+      document.write('<script src="https://unpkg.com/omggif@1.0.10/omggif.js"><\/script>');
+    }
+  </script>
+  <!-- 폰트: 프리텐다드, 타자기(Courier Prime), 손글씨(Caveat) -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --sys-color: #111111; /* 서류철 블랙 잉크 */
+      --accent-color: #dc2626; /* 레드 스탬프 */
+    }
+
+    body { font-family: "Pretendard", -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .font-typewriter { font-family: 'Courier Prime', 'Pretendard', monospace; }
+    .font-handwriting { font-family: 'Caveat', cursive; }
+    #previewCanvas { touch-action: none; cursor: crosshair; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #52525b; border-radius: 4px; }
+    
+    /* 어두운 수사 데스크 배경 */
+    .desk-bg {
+      background-color: #18181b;
+      background-image: radial-gradient(#27272a 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .btn-on { background-color: #fef3c7; color: #92400e; border: 1px solid #d97706; }
+    .btn-off { background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; }
+    .paper-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    
+    input[type=range] { -webkit-appearance: none; background: transparent; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+      background: #eab308; cursor: pointer; margin-top: -5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #3f3f46; border-radius: 2px; }
+  </style>
+</head>
+<body class="desk-bg text-zinc-100 min-h-screen pb-16">
+
+  <!-- 헤더 -->
+  <header class="border-b border-black px-4 py-3 bg-[#111]/90 backdrop-blur sticky top-0 z-30 flex items-center justify-between shadow-md">
+    <div class="flex items-center space-x-2">
+      <span class="text-xs font-bold tracking-widest text-zinc-200 font-typewriter">DOPA.INTERNAL_DOSSIER</span>
+      <span class="text-[10px] text-black bg-yellow-400 px-1.5 py-0.5 rounded-sm font-typewriter font-bold">EVIDENCE</span>
+    </div>
+    <span class="text-xs text-zinc-500 font-typewriter">CASE_FILE // 16:9</span>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 pt-4 space-y-4">
+
+    <!-- 1. 16:9 캔버스 -->
+    <div class="bg-[#111] rounded-sm p-1.5 border border-zinc-800 shadow-2xl flex flex-col items-center relative overflow-hidden">
+      <div class="w-full flex items-center justify-between pb-1 px-2 text-[10px] text-zinc-400 font-typewriter">
+        <span>[ RECORDS_DEPARTMENT ]</span>
+        <button id="btnResetPositions" class="hover:text-white underline decoration-zinc-500 font-bold px-1 rounded transition active:scale-95">RESET_DESK</button>
+      </div>
+      <div class="absolute top-10 w-full text-center pointer-events-none z-10 opacity-80">
+        <span class="bg-black/80 px-2 py-1 rounded text-[9px] text-yellow-400 font-typewriter border border-yellow-600/50 shadow-md">
+          💡 <b>[사진 안]</b>을 끌면 크롭 이동 / <b>[종이 여백]</b>을 끌면 서류 이동
+        </span>
+      </div>
+      <canvas id="previewCanvas" width="960" height="540" class="w-full aspect-[16/9] bg-[#e6e1d8] paper-shadow border border-zinc-900"></canvas>
+    </div>
+
+    <!-- 2. 내보내기 버튼 -->
+    <div class="space-y-3 bg-[#18181b] p-3.5 rounded-sm border border-zinc-800 shadow-md">
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btnGenerateMP4" class="py-3 bg-zinc-200 hover:bg-white text-black font-typewriter font-bold tracking-widest text-xs transition-all flex items-center justify-center space-x-1.5 shadow-lg">
+          <span>[ EXPORT_MP4 ]</span>
+        </button>
+        <button id="btnGenerateGIF" class="py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-typewriter font-bold tracking-widest border border-zinc-600 text-xs transition-all flex items-center justify-center space-x-1.5">
+          <span>[ EXPORT_GIF ]</span>
+        </button>
+      </div>
+      <p class="text-[10px] text-zinc-500 text-center font-typewriter">
+        기밀 유지: 트위터 업로드 시 무손실 초고화질을 원한다면 MP4를 권장합니다.
+      </p>
+      <div id="loadingStatus" class="hidden space-y-1.5 py-1">
+        <div class="w-full bg-zinc-900 h-1.5 rounded-none overflow-hidden border border-zinc-800">
+          <div id="progressBar" class="bg-yellow-500 h-full w-0 transition-all duration-100"></div>
+        </div>
+        <p id="statusMsg" class="text-center text-[10px] text-yellow-500 font-typewriter">GATHERING EVIDENCE...</p>
+      </div>
+      <div id="resultArea" class="hidden flex flex-col items-center space-y-3 pt-2">
+        <div id="previewMediaWrapper" class="w-full max-w-[320px] overflow-hidden border border-zinc-700 shadow-2xl aspect-[16/9] bg-black"></div>
+        <div class="flex w-full gap-2">
+          <a id="btnDownload" download="dopa_internal_dossier" class="flex-1 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-black font-typewriter font-bold text-center text-xs transition">
+            SAVE_FILE
+          </a>
+          <button id="btnShareX" class="py-2.5 px-4 bg-zinc-200 hover:bg-white text-black font-bold text-xs transition flex items-center gap-1.5">
+            𝕏 트윗
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 컨트롤 패널 -->
+    <div class="bg-[#18181b] border border-zinc-800 shadow-xl rounded-sm overflow-hidden">
+      <div class="grid grid-cols-3 border-b border-zinc-800 text-[10px] font-typewriter font-bold text-center">
+        <button id="tabBtn1" class="tab-btn py-3 border-b-2 border-yellow-500 text-yellow-500 transition" data-tab="tab1">EVIDENCE_PICS</button>
+        <button id="tabBtn2" class="tab-btn py-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 transition" data-tab="tab2">DOSSIER_LOG</button>
+        <button id="tabBtn4" class="tab-btn py-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 transition" data-tab="tab4">DESK_ITEMS</button>
+      </div>
+
+      <div class="p-4 space-y-4">
+        
+        <!-- [탭 1] 증거 사진 등록 -->
+        <div id="tab1" class="tab-content space-y-4">
+          <!-- 전체 데스크(마닐라 폴더) 배경 -->
+          <div class="bg-[#111] p-3 rounded-sm border border-zinc-800 space-y-2 shadow-inner">
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-bold text-zinc-300 font-typewriter">DESK_SURFACE (배경)</label>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex flex-col items-center justify-center p-2 bg-[#1a1a1a] border border-zinc-700 cursor-pointer text-center hover:bg-zinc-800 transition">
+                <span class="text-[11px] mb-0.5">🖼️ 갤러리</span><input type="file" id="bgInputBoardGallery" accept="image/*" class="hidden">
+              </label>
+              <label class="flex flex-col items-center justify-center p-2 bg-yellow-900/10 border border-yellow-700/50 cursor-pointer text-center hover:bg-yellow-900/30 transition">
+                <span class="text-[11px] mb-0.5 font-bold text-yellow-500">📁 움짤(GIF)</span><input type="file" id="bgInputBoardFiles" accept="*/*" class="hidden">
+              </label>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-zinc-800/80">
+              <span class="text-[10px] text-zinc-500 font-typewriter">ZOOM</span>
+              <input type="range" id="zoomBoard" min="50" max="300" value="100" class="flex-1">
+            </div>
+          </div>
+
+          <!-- 왼쪽: 범죄자 프로필 사진 -->
+          <div class="bg-[#111] p-3 border border-zinc-800 space-y-2 relative shadow-inner">
+            <button id="btnSwapMedia" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-200 text-[10px] px-2 py-1 rounded-sm font-typewriter transition z-10 shadow-md">
+              🔁 SWAP L/R
+            </button>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-bold text-zinc-300 font-typewriter">PROFILE_MUGSHOT (LEFT)</label>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex flex-col items-center justify-center p-2 bg-[#1a1a1a] border border-zinc-700 cursor-pointer text-center hover:bg-zinc-800 transition">
+                <span class="text-[11px] mb-0.5">📷 흑백사진</span><input type="file" id="bgInput1Gallery" accept="image/*" class="hidden">
+              </label>
+              <label class="flex flex-col items-center justify-center p-2 bg-yellow-900/10 border border-yellow-700/50 cursor-pointer text-center hover:bg-yellow-900/30 transition">
+                <span class="text-[11px] mb-0.5 text-yellow-500 font-bold">🎞️ CCTV(GIF)</span><input type="file" id="bgInput1Files" accept="*/*" class="hidden">
+              </label>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-zinc-800/80">
+              <span class="text-[10px] text-zinc-500 font-typewriter">ZOOM</span>
+              <input type="range" id="zoom1" min="50" max="300" value="100" class="flex-1">
+            </div>
+          </div>
+
+          <!-- 오른쪽: 현장 증거 사진 -->
+          <div class="bg-[#111] p-3 border border-zinc-800 space-y-2 shadow-inner">
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-bold text-zinc-300 font-typewriter">EVIDENCE_PHOTO (RIGHT)</label>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex flex-col items-center justify-center p-2 bg-[#1a1a1a] border border-zinc-700 cursor-pointer text-center hover:bg-zinc-800 transition">
+                <span class="text-[11px] mb-0.5">📷 현장사진</span><input type="file" id="bgInput2Gallery" accept="image/*" class="hidden">
+              </label>
+              <label class="flex flex-col items-center justify-center p-2 bg-yellow-900/10 border border-yellow-700/50 cursor-pointer text-center hover:bg-yellow-900/30 transition">
+                <span class="text-[11px] mb-0.5 text-yellow-500 font-bold">🎞️ CCTV(GIF)</span><input type="file" id="bgInput2Files" accept="*/*" class="hidden">
+              </label>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-zinc-800/80">
+              <span class="text-[10px] text-zinc-500 font-typewriter">ZOOM</span>
+              <input type="range" id="zoom2" min="50" max="300" value="100" class="flex-1">
+            </div>
+          </div>
+        </div>
+
+        <!-- [탭 2] 조서 및 스탬프 설정 -->
+        <div id="tab2" class="tab-content hidden space-y-4">
+          <div>
+            <label class="text-[10px] text-zinc-400 font-typewriter">STICKY_NOTE_TEXT (주황색 메모지)</label>
+            <input type="text" id="quoteText" placeholder="예: 2차 검토 후 즉시 파기할 것." value="" class="w-full mt-1 bg-[#1a1a1a] border border-zinc-700 px-3 py-2 text-xs text-yellow-500 placeholder-zinc-600 font-typewriter focus:outline-none focus:border-yellow-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#111] p-2.5 border border-zinc-800 space-y-2">
+              <span class="text-[9px] font-bold text-zinc-400 font-typewriter">SUB_01_NAME</span>
+              <div>
+                <input type="text" id="name1" placeholder="이름 (예: 윤세라)" value="" class="w-full bg-[#1a1a1a] border border-zinc-700 px-2 py-1.5 text-[11px] text-white font-typewriter mb-1">
+              </div>
+            </div>
+            <div class="bg-[#111] p-2.5 border border-zinc-800 space-y-2">
+              <span class="text-[9px] font-bold text-zinc-400 font-typewriter">SUB_02_TAG (증거 번호표)</span>
+              <div>
+                <input type="text" id="name2" placeholder="숫자 (예: 7)" value="7" class="w-full bg-[#1a1a1a] border border-zinc-700 px-2 py-1.5 text-[11px] text-white font-typewriter mb-1 text-center">
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 border-t border-zinc-800 pt-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold text-zinc-300 font-typewriter">DOSSIER_LOG (조서 기록)</span>
+                <span class="text-[8px] text-yellow-500 ml-1">★ 타자기 스타일</span>
+              </div>
+              <button id="btnAddBubble" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[9px] font-bold font-typewriter border border-zinc-600 transition rounded-sm">
+                + ADD_RECORD
+              </button>
+            </div>
+            <p class="text-[9px] text-zinc-500 font-typewriter mb-1">※ [DEL] 선택 시 기밀(Redacted) 마커 처리됩니다.</p>
+            <div id="bubblesContainer" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- [탭 4] 데스크 서류 ON/OFF -->
+        <div id="tab4" class="tab-content hidden space-y-4">
+          <div class="bg-[#111] p-3 rounded-sm border border-zinc-800 space-y-2">
+            <span class="text-[10px] text-zinc-400 font-typewriter">DESK_ITEMS</span>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <button class="toggle-widget btn-on text-[10px] py-2 rounded-sm font-typewriter transition shadow-sm" data-widget="profile1">CRIMINAL_PROFILE_ON</button>
+              <button class="toggle-widget btn-on text-[10px] py-2 rounded-sm font-typewriter transition shadow-sm" data-widget="profile2">EVIDENCE_PHOTO_ON</button>
+              <button class="toggle-widget btn-on text-[10px] py-2 rounded-sm font-typewriter transition shadow-sm" data-widget="logConsole">DOSSIER_PAPER_ON</button>
+              <button class="toggle-widget btn-on text-[10px] py-2 rounded-sm font-typewriter transition shadow-sm" data-widget="warningBox">STICKY_NOTE_ON</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="text-center pt-2 pb-6">
+      <a href="https://your-dopa-url.com" target="_blank" class="inline-flex items-center gap-1.5 text-[10px] text-zinc-600 hover:text-zinc-400 font-typewriter transition">
+        <span>[ dopa.internal_dossier.v1 ]</span>
+      </a>
+    </footer>
+
+  </main>
+
+  <script>
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 미디어 및 설정
+    let boardMedia = null; 
+    let bgMedia1 = null;   // 머그샷 (좌측)
+    let bgMedia2 = null;   // 증거사진 (우측)
+    let boardConfig = { scale: 1, x: 0, y: 0, defaultScale: 1 };
+    let bgConfig1 = { scale: 1, x: 0, y: 0, defaultScale: 1 };
+    let bgConfig2 = { scale: 1, x: 0, y: 0, defaultScale: 1 };
+    
+    let animProgress = 0; let previewTimer = null; let isExporting = false;
+
+    function getWrappedLines(context, text, maxWidth) {
+      if (!text) return [''];
+      const chars = Array.from(text); const lines = []; let currentLine = '';
+      for (let i = 0; i < chars.length; i++) {
+        const testLine = currentLine + chars[i];
+        if (context.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+          lines.push(currentLine); currentLine = chars[i];
+        } else { currentLine = testLine; }
+      }
+      if (currentLine) lines.push(currentLine);
+      return lines.length > 0 ? lines : [''];
+    }
+
+    // 책상 위 서류 배치 구도
+    const defaultElements = {
+      profile1:   { id: 'profile1',   x: 40,  y: 40,  w: 360, h: 420 }, // 조서 서류 (왼쪽)
+      logConsole: { id: 'logConsole', x: 440, y: 40,  w: 480, h: 280 }, // 타이핑 기록 (오른쪽 위)
+      profile2:   { id: 'profile2',   x: 520, y: 340, w: 240, h: 160 }, // 증거 사진 (오른쪽 아래 흩뿌려짐)
+      warningBox: { id: 'warningBox', x: 260, y: 320, w: 180, h: 160 }  // 주황색 메모지
+    };
+    let elements = JSON.parse(JSON.stringify(defaultElements));
+    // 렌더링 순서 (아래 깔리는 서류부터)
+    let renderOrder = ['profile1', 'logConsole', 'profile2', 'warningBox'];
+    let wState = { profile1: true, profile2: true, logConsole: true, warningBox: true };
+
+    let draggingItem = null; let draggingBackground = 0; let dragOffset = { x: 0, y: 0 };
+    let snapGuides = { x: null, y: null };
+
+    // 조서 로그
+    let logEntries = [
+      { type: 'sys',   text: '', placeholder: 'DATE: 1998.06.15' },
+      { type: 'left',  text: '', placeholder: 'Q: 그날 밤 어디 있었나?' },
+      { type: 'right', text: '', placeholder: 'A: 집에서 자고 있었습니다.' },
+      { type: 'err',   text: '', placeholder: '[기밀 삭제 처리됨]' }
+    ];
+
+    function updateWidgetSizes() {
+      // 타이핑 서류 높이 계산
+      ctx.font = 'bold 13px "Courier Prime", "Pretendard"';
+      let totalLines = 0;
+      logEntries.forEach(log => {
+        const text = log.text.trim() || log.placeholder;
+        const lines = getWrappedLines(ctx, text, elements.logConsole.w - 60);
+        totalLines += lines.length;
+      });
+      elements.logConsole.h = Math.max(200, 100 + totalLines * 22);
+    }
+
+    // UI 이벤트 리스너 세팅
+    document.querySelectorAll('.toggle-widget').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wKey = btn.dataset.widget; wState[wKey] = !wState[wKey];
+        if(wState[wKey]) { btn.classList.remove('btn-off'); btn.classList.add('btn-on'); btn.textContent = btn.textContent.replace('OFF', 'ON'); } 
+        else { btn.classList.remove('btn-on'); btn.classList.add('btn-off'); btn.textContent = btn.textContent.replace('ON', 'OFF'); }
+        draw();
+      });
+    });
+
+    document.getElementById('btnSwapMedia').addEventListener('click', () => {
+      const tb = bgMedia1; bgMedia1 = bgMedia2; bgMedia2 = tb;
+      const tc = bgConfig1; bgConfig1 = bgConfig2; bgConfig2 = tc;
+      const tz = document.getElementById('zoom1').value; document.getElementById('zoom1').value = document.getElementById('zoom2').value; document.getElementById('zoom2').value = tz;
+      const tn = document.getElementById('name1').value; document.getElementById('name1').value = document.getElementById('name2').value; document.getElementById('name2').value = tn;
+      draw();
+    });
+
+    const bubblesContainer = document.getElementById('bubblesContainer');
+    function renderLogInputs() {
+      bubblesContainer.innerHTML = '';
+      logEntries.forEach((log, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-1.5 bg-[#111] p-1.5 border border-zinc-800 text-xs rounded-sm';
+        row.innerHTML = `
+          <select class="log-type-select bg-[#1a1a1a] text-[9px] border border-zinc-700 font-typewriter text-zinc-300 py-1 focus:outline-none" data-index="${idx}">
+            <option value="sys" ${log.type==='sys'?'selected':''}>[SYS]</option>
+            <option value="left" ${log.type==='left'?'selected':''}>[Q]</option>
+            <option value="right" ${log.type==='right'?'selected':''}>[A]</option>
+            <option value="err" ${log.type==='err'?'selected':''}>[DEL]</option>
+          </select>
+          <input type="text" value="${log.text}" placeholder="${log.placeholder}" class="log-text flex-1 bg-transparent border-0 text-white placeholder-zinc-600 text-[10px] px-1 font-typewriter focus:outline-none" data-index="${idx}">
+          <button class="delete-log text-zinc-600 hover:text-red-500 px-1 text-[10px]" data-index="${idx}">X</button>
+        `;
+        bubblesContainer.appendChild(row);
+      });
+      updateWidgetSizes();
+
+      document.querySelectorAll('.log-type-select').forEach(sel => { sel.addEventListener('change', (e) => { logEntries[e.target.dataset.index].type = e.target.value; updateWidgetSizes(); draw(); }); });
+      document.querySelectorAll('.log-text').forEach(input => { input.addEventListener('input', (e) => { logEntries[e.target.dataset.index].text = e.target.value; updateWidgetSizes(); draw(); }); });
+      document.querySelectorAll('.delete-log').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          if (logEntries.length <= 1) return; logEntries.splice(e.target.dataset.index, 1); renderLogInputs(); updateWidgetSizes(); draw();
+        });
+      });
+    }
+    document.getElementById('btnAddBubble').addEventListener('click', () => { logEntries.push({ type: 'sys', text: '', placeholder: 'NEW_RECORD' }); renderLogInputs(); updateWidgetSizes(); draw(); });
+    renderLogInputs();
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('border-yellow-500', 'text-yellow-500'); b.classList.add('border-transparent', 'text-zinc-500'); });
+        btn.classList.add('border-yellow-500', 'text-yellow-500'); btn.classList.remove('border-transparent', 'text-zinc-500');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    const quoteText = document.getElementById('quoteText'), name1 = document.getElementById('name1'), name2 = document.getElementById('name2');
+    [quoteText, name1, name2].forEach(el => el.addEventListener('input', () => { updateWidgetSizes(); draw(); }));
+
+    const zoom1 = document.getElementById('zoom1'), zoom2 = document.getElementById('zoom2'), zoomBoard = document.getElementById('zoomBoard');
+    zoom1.addEventListener('input', (e) => { if(bgMedia1) { bgConfig1.scale = bgConfig1.defaultScale * (e.target.value / 100); draw(); } });
+    zoom2.addEventListener('input', (e) => { if(bgMedia2) { bgConfig2.scale = bgConfig2.defaultScale * (e.target.value / 100); draw(); } });
+    zoomBoard.addEventListener('input', (e) => { if(boardMedia) { boardConfig.scale = boardConfig.defaultScale * (e.target.value / 100); draw(); } });
+
+    document.getElementById('btnResetPositions').addEventListener('click', () => {
+      elements = JSON.parse(JSON.stringify(defaultElements));
+      boardConfig.x = 0; boardConfig.y = 0; bgConfig1.x = 0; bgConfig1.y = 0; bgConfig2.x = 0; bgConfig2.y = 0;
+      if(boardMedia) { boardConfig.scale = boardConfig.defaultScale; zoomBoard.value = 100; }
+      if(bgMedia1) { bgConfig1.scale = bgConfig1.defaultScale; zoom1.value = 100; }
+      if(bgMedia2) { bgConfig2.scale = bgConfig2.defaultScale; zoom2.value = 100; }
+      updateWidgetSizes(); draw();
+    });
+
+    // 미디어 로더
+    async function loadMediaFile(file) {
+      if (!file) return null;
+      try {
+        const buffer = await file.arrayBuffer(); const bytes = new Uint8Array(buffer);
+        if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+          const ReaderClass = (window.omggif && window.omggif.GifReader) || window.GifReader;
+          if (ReaderClass) {
+            const reader = new ReaderClass(bytes); const numFrames = reader.numFrames();
+            if (numFrames > 1) {
+              const w = reader.width, h = reader.height; const canvasList = []; const framePixels = new Uint8ClampedArray(w * h * 4);
+              for (let i = 0; i < numFrames; i++) {
+                reader.decodeAndBlitFrameRGBA(i, framePixels);
+                const fCanvas = document.createElement('canvas'); fCanvas.width = w; fCanvas.height = h;
+                const fCtx = fCanvas.getContext('2d'); const imgData = fCtx.createImageData(w, h);
+                imgData.data.set(framePixels); fCtx.putImageData(imgData, 0, 0); canvasList.push(fCanvas);
+              }
+              return { isGif: true, frames: canvasList, width: w, height: h };
+            }
+          }
+        }
+      } catch (err) {}
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve({ isGif: false, img, width: img.width, height: img.height });
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function onMediaSelected(inputEl, targetType) {
+      if (inputEl.files && inputEl.files[0]) {
+        let targetConfig, w, h;
+        if (targetType === 'board') { w = 960; h = 540; }
+        else if (targetType === 'left') { w = 120; h = 140; } // 머그샷 영역
+        else { w = 220; h = 140; } // 증거사진 영역
+
+        const media = await loadMediaFile(inputEl.files[0]);
+        if (media) {
+          const coverScale = Math.max(w / media.width, h / media.height);
+          if (targetType === 'board') { boardMedia = media; boardConfig = { scale: coverScale, x: 0, y: 0, defaultScale: coverScale }; zoomBoard.value = 100; }
+          else if (targetType === 'left') { bgMedia1 = media; bgConfig1 = { scale: coverScale, x: 0, y: 0, defaultScale: coverScale }; zoom1.value = 100; } 
+          else { bgMedia2 = media; bgConfig2 = { scale: coverScale, x: 0, y: 0, defaultScale: coverScale }; zoom2.value = 100; }
+          draw();
+        }
+      }
+    }
+    document.getElementById('bgInputBoardGallery').addEventListener('change', (e) => onMediaSelected(e.target, 'board'));
+    document.getElementById('bgInputBoardFiles').addEventListener('change', (e) => onMediaSelected(e.target, 'board'));
+    document.getElementById('bgInput1Gallery').addEventListener('change', (e) => onMediaSelected(e.target, 'left'));
+    document.getElementById('bgInput1Files').addEventListener('change', (e) => onMediaSelected(e.target, 'left'));
+    document.getElementById('bgInput2Gallery').addEventListener('change', (e) => onMediaSelected(e.target, 'right'));
+    document.getElementById('bgInput2Files').addEventListener('change', (e) => onMediaSelected(e.target, 'right'));
+
+    function getDrawableSource(media, prog) {
+      if (!media) return null;
+      if (media.isGif && media.frames && media.frames.length > 0) {
+        const frameIdx = Math.floor(prog * media.frames.length * 3) % media.frames.length; return media.frames[frameIdx];
+      }
+      return media.img;
+    }
+
+    // 스마트 드래그 (사진 크롭 분리)
+    const SNAP_THRESHOLD = 15;
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+    }
+    
+    function handleDragStart(e) {
+      if (isExporting) return;
+      const pos = getCanvasCoords(e); draggingItem = null; draggingBackground = 0; snapGuides = { x: null, y: null };
+      
+      for (let i = renderOrder.length - 1; i >= 0; i--) {
+        const key = renderOrder[i]; if (!wState[key]) continue;
+        const it = elements[key];
+        if (pos.x >= it.x && pos.x <= it.x + it.w && pos.y >= it.y && pos.y <= it.y + it.h) {
+          // 사진 영역 클릭 여부 (크롭 이동)
+          if (key === 'profile1') {
+            const px = it.x + 30, py = it.y + 120, pw = 120, ph = 140;
+            if (pos.x >= px && pos.x <= px + pw && pos.y >= py && pos.y <= py + ph) {
+               draggingBackground = 1; dragOffset.x = pos.x; dragOffset.y = pos.y;
+               if (e.cancelable) e.preventDefault(); return;
+            }
+          }
+          if (key === 'profile2') {
+            // profile2는 회전되어 그려짐. 대략적인 바운딩 박스로 판별
+            const px = it.x + 10, py = it.y + 10, pw = it.w - 20, ph = it.h - 20;
+            if (pos.x >= px && pos.x <= px + pw && pos.y >= py && pos.y <= py + ph) {
+               draggingBackground = 2; dragOffset.x = pos.x; dragOffset.y = pos.y;
+               if (e.cancelable) e.preventDefault(); return;
+            }
+          }
+          // 위젯 전체 이동
+          draggingItem = key; dragOffset.x = pos.x - it.x; dragOffset.y = pos.y - it.y;
+          renderOrder.splice(i, 1); renderOrder.push(key);
+          if (e.cancelable) e.preventDefault(); draw(); return;
+        }
+      }
+      // 보드 배경 이동
+      draggingBackground = 3; dragOffset.x = pos.x; dragOffset.y = pos.y;
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function handleDragMove(e) {
+      if (isExporting || (!draggingItem && draggingBackground === 0)) return;
+      const pos = getCanvasCoords(e); snapGuides = { x: null, y: null };
+
+      if (draggingItem) {
+        const item = elements[draggingItem];
+        let newX = Math.round(pos.x - dragOffset.x); let newY = Math.round(pos.y - dragOffset.y);
+        const itemCX = newX + item.w / 2, itemCY = newY + item.h / 2;
+        if (Math.abs(itemCX - 480) < SNAP_THRESHOLD) { newX = 480 - item.w / 2; snapGuides.x = 480; }
+        if (Math.abs(itemCY - 270) < SNAP_THRESHOLD) { newY = 270 - item.h / 2; snapGuides.y = 270; }
+        item.x = newX; item.y = newY;
+      } else if (draggingBackground !== 0) {
+        const dx = pos.x - dragOffset.x; const dy = pos.y - dragOffset.y;
+        if (draggingBackground === 1) { bgConfig1.x += dx; bgConfig1.y += dy; } 
+        else if (draggingBackground === 2) { bgConfig2.x += dx; bgConfig2.y += dy; } 
+        else if (draggingBackground === 3) {
+          boardConfig.x += dx; boardConfig.y += dy;
+          if (Math.abs(boardConfig.x) < SNAP_THRESHOLD) { boardConfig.x = 0; snapGuides.x = 480; }
+          if (Math.abs(boardConfig.y) < SNAP_THRESHOLD) { boardConfig.y = 0; snapGuides.y = 270; }
+        }
+        dragOffset.x = pos.x; dragOffset.y = pos.y;
+      }
+      if (e.cancelable) e.preventDefault(); draw();
+    }
+    function handleDragEnd() { draggingItem = null; draggingBackground = 0; snapGuides = { x: null, y: null }; draw(); }
+
+    canvas.addEventListener('mousedown', handleDragStart); window.addEventListener('mousemove', handleDragMove); window.addEventListener('mouseup', handleDragEnd);
+    canvas.addEventListener('touchstart', handleDragStart, { passive: false }); window.addEventListener('touchmove', handleDragMove, { passive: false }); window.addEventListener('touchend', handleDragEnd);
+
+    // ================= 메인 렌더링 =================
+    function drawMediaConfigured(c, media, srcImg, areaW, areaH, config, areaX, areaY) {
+      if (!srcImg || !media) return;
+      const sw = media.width * config.scale; const sh = media.height * config.scale;
+      const x = areaX + (areaW - sw) / 2 + config.x; const y = areaY + (areaH - sh) / 2 + config.y;
+      c.drawImage(srcImg, x, y, sw, sh);
+    }
+
+    // 마닐라 폴더(데스크) 배경
+    function drawBoardBackground(prog) {
+      ctx.fillStyle = '#eaddcf'; ctx.fillRect(0, 0, canvas.width, canvas.height); // Manila color
+      if (boardMedia) {
+        const src = getDrawableSource(boardMedia, prog);
+        if (src) drawMediaConfigured(ctx, boardMedia, src, canvas.width, canvas.height, boardConfig, 0, 0);
+      }
+      // 데스크 텍스처 느낌의 그라데이션 오버레이
+      const grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, 800);
+      grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 종이 그림자 공통
+    function setPaperShadow() {
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
+    }
+    function resetShadow() {
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    }
+
+    // 1. 범죄자 프로필 조서 (왼쪽 서류)
+    function renderCriminalProfile(prog) {
+      const it = elements.profile1;
+      const name = document.getElementById('name1').value.trim() || 'UNKNOWN';
+
+      ctx.save();
+      setPaperShadow();
+      ctx.fillStyle = '#fdfbf7'; // 낡은 종이색
+      ctx.fillRect(it.x, it.y, it.w, it.h);
+      resetShadow();
+
+      // 내부 테두리
+      ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(it.x + 15, it.y + 15, it.w - 30, it.h - 30);
+
+      // 헤더
+      ctx.fillStyle = '#111'; ctx.font = 'bold 16px "Courier Prime"'; ctx.textAlign = 'center';
+      ctx.fillText('CRIMINAL PROFILE', it.x + it.w/2, it.y + 40);
+      
+      ctx.beginPath(); ctx.moveTo(it.x + 30, it.y + 48); ctx.lineTo(it.x + it.w - 30, it.y + 48); ctx.stroke();
+
+      // 텍스트 필드들
+      ctx.textAlign = 'left'; ctx.font = '10px "Courier Prime"';
+      ctx.fillText('NAME:', it.x + 30, it.y + 70);
+      ctx.font = 'bold 14px "Courier Prime"'; ctx.fillText(name, it.x + 80, it.y + 70);
+      
+      ctx.beginPath(); ctx.moveTo(it.x + 30, it.y + 76); ctx.lineTo(it.x + it.w - 30, it.y + 76);
+      ctx.moveTo(it.x + 30, it.y + 96); ctx.lineTo(it.x + it.w - 30, it.y + 96);
+      ctx.stroke();
+
+      // 사진(머그샷) 영역
+      const px = it.x + 30; const py = it.y + 110; const pw = 120; const ph = 140;
+      ctx.fillStyle = '#111'; ctx.fillRect(px, py, pw, ph);
+      
+      if (bgMedia1) {
+        const srcImg = getDrawableSource(bgMedia1, prog);
+        ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
+        // 흑백 필터 적용
+        ctx.filter = 'grayscale(100%) contrast(1.2)';
+        drawMediaConfigured(ctx, bgMedia1, srcImg, pw, ph, bgConfig1, px, py);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#fff'; ctx.font = '10px "Courier Prime"'; ctx.textAlign = 'center';
+        ctx.fillText('ATTACH PHOTO', px + pw/2, py + ph/2);
+      }
+
+      // 우측 지문(Fingerprints) 그래픽 시뮬레이션
+      ctx.fillStyle = '#3b82f6'; // 파란 잉크
+      ctx.globalAlpha = 0.2;
+      for(let i=0; i<3; i++) {
+        const fx = it.x + 180 + (i%2)*40;
+        const fy = it.y + 140 + (i*40);
+        ctx.beginPath(); ctx.ellipse(fx, fy, 15, 20, Math.random()*0.5, 0, Math.PI*2); ctx.fill();
+        // 지문 결 느낌의 선
+        for(let j=0; j<5; j++) {
+           ctx.beginPath(); ctx.arc(fx, fy+j*2-5, 8+j*2, Math.PI, 0); ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1.0;
+      
+      ctx.restore();
+    }
+
+    // 2. 조서 타이핑 기록 (오른쪽 위 서류)
+    function renderTranscript(prog) {
+      const it = elements.logConsole;
+      ctx.save();
+      setPaperShadow();
+      ctx.fillStyle = '#f8f9fa'; ctx.fillRect(it.x, it.y, it.w, it.h);
+      resetShadow();
+
+      // 문서 헤더
+      ctx.fillStyle = '#111'; ctx.font = '10px "Courier Prime"'; ctx.textAlign = 'right';
+      ctx.fillText('CASE FILE -- INTERNAL DOSSIER', it.x + it.w - 20, it.y + 20);
+      ctx.beginPath(); ctx.moveTo(it.x + 20, it.y + 30); ctx.lineTo(it.x + it.w - 20, it.y + 30); ctx.stroke();
+
+      const total = logEntries.length;
+      const stepDur = 0.75 / total; 
+      let currentY = it.y + 50; 
+
+      logEntries.forEach((log, idx) => {
+        const text = log.text.trim() || log.placeholder;
+        const entryProgStart = idx * stepDur;
+        
+        ctx.font = 'bold 13px "Courier Prime", "Pretendard"'; 
+        const lines = getWrappedLines(ctx, text, it.w - 60);
+        
+        if (prog >= entryProgStart) {
+          let typeColor = '#111'; let label = '';
+          if (log.type === 'left') { label = 'Q:'; }
+          if (log.type === 'right') { label = 'A:'; }
+          if (log.type === 'err') { label = ' '; }
+
+          ctx.font = 'bold 13px "Courier Prime"'; ctx.fillStyle = typeColor;
+          ctx.fillText(`${label}`, it.x + 20, currentY);
+
+          const localProg = Math.min(1, (prog - entryProgStart) / (stepDur * 0.8));
+          const charCount = Math.ceil(localProg * text.length);
+          const showText = text.substring(0, charCount);
+
+          ctx.font = 'bold 13px "Courier Prime", "Pretendard"'; 
+          const showLines = getWrappedLines(ctx, showText, it.w - 60);
+          
+          showLines.forEach((line, lIdx) => {
+            // [REDACTED] 검은 마커
+            if (log.type === 'err') {
+              const lw = ctx.measureText(line).width;
+              ctx.fillStyle = '#111';
+              ctx.fillRect(it.x + 50, currentY - 14 + lIdx * 22, lw + 10, 18);
+            } else {
+              ctx.fillText(line, it.x + 50, currentY + lIdx * 22);
+            }
+          });
+        }
+        currentY += 22 * lines.length + 6;
+      });
+      ctx.restore();
+    }
+
+    // 3. 흩뿌려진 현장 증거 사진 + 노란 증거 태그 (오른쪽 아래)
+    function renderEvidencePhoto(prog) {
+      const it = elements.profile2;
+      const tagNum = document.getElementById('name2').value.trim() || '7';
+
+      ctx.save();
+      // 살짝 회전시켜서 무심하게 던져진 느낌 연출
+      ctx.translate(it.x + it.w/2, it.y + it.h/2);
+      ctx.rotate(6 * Math.PI / 180);
+      
+      const pW = it.w; const pH = it.h;
+      setPaperShadow();
+      // 폴라로이드 흰 테두리
+      ctx.fillStyle = '#fdfdfd'; ctx.fillRect(-pW/2, -pH/2, pW, pH);
+      resetShadow();
+
+      // 사진 영역
+      const imgW = pW - 16; const imgH = pH - 16;
+      ctx.fillStyle = '#111'; ctx.fillRect(-imgW/2, -imgH/2, imgW, imgH);
+
+      if (bgMedia2) {
+        const srcImg = getDrawableSource(bgMedia2, prog);
+        ctx.save(); ctx.beginPath(); ctx.rect(-imgW/2, -imgH/2, imgW, imgH); ctx.clip();
+        drawMediaConfigured(ctx, bgMedia2, srcImg, imgW, imgH, bgConfig2, -imgW/2, -imgH/2);
+        ctx.restore();
+      }
+
+      // 노란색 증거 번호표 (Evidence Tag)
+      ctx.fillStyle = '#eab308'; // 노란색
+      ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+      ctx.fillRect(-pW/2 - 10, -pH/2 + 20, 30, 30);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      
+      ctx.fillStyle = '#111'; ctx.font = 'bold 18px "Courier Prime"'; ctx.textAlign = 'center';
+      ctx.fillText(tagNum, -pW/2 + 5, -pH/2 + 42);
+
+      ctx.restore();
+    }
+
+    // 4. 주황색 메모지 (DESTRUCTION STICKY NOTE)
+    function renderStickyNote(prog) {
+      const it = elements.warningBox;
+      const text = document.getElementById('quoteText').value.trim() || document.getElementById('quoteText').placeholder.replace('예: ', '');
+      
+      ctx.save();
+      ctx.translate(it.x + it.w/2, it.y + it.h/2);
+      ctx.rotate(-2 * Math.PI / 180);
+
+      // 쨍한 주황색 포스트잇
+      setPaperShadow();
+      ctx.fillStyle = '#f97316'; ctx.fillRect(-it.w/2, -it.h/2, it.w, it.h);
+      resetShadow();
+
+      ctx.strokeStyle = '#c2410c'; ctx.lineWidth = 2;
+      ctx.strokeRect(-it.w/2 + 6, -it.h/2 + 6, it.w - 12, it.h - 12);
+
+      // 상단 클립(빨간색) 그림
+      ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-it.w/2 + 40, -it.h/2 - 5);
+      ctx.lineTo(-it.w/2 + 40, -it.h/2 + 15);
+      ctx.moveTo(-it.w/2 + 45, -it.h/2 - 8);
+      ctx.lineTo(-it.w/2 + 45, -it.h/2 + 12);
+      ctx.stroke();
+
+      ctx.fillStyle = '#111'; ctx.font = 'bold 12px "Courier Prime"'; ctx.textAlign = 'left';
+      ctx.fillText('DATE FOR', -it.w/2 + 16, -it.h/2 + 30);
+      
+      // 손글씨 느낌 폰트로 연도
+      ctx.font = 'bold 28px "Caveat", cursive';
+      ctx.fillText('1989', -it.w/2 + 80, -it.h/2 + 40);
+      
+      ctx.font = '10px "Courier Prime"';
+      ctx.fillText('(a) SECOND REVIEW', -it.w/2 + 16, -it.h/2 + 60);
+      ctx.fillText('(b) DESTRUCTION', -it.w/2 + 16, -it.h/2 + 75);
+
+      // 취소선
+      ctx.beginPath(); ctx.moveTo(-it.w/2 + 14, -it.h/2 + 57); ctx.lineTo(-it.w/2 + 120, -it.h/2 + 57); ctx.stroke();
+
+      ctx.font = 'bold 18px "Caveat", cursive';
+      ctx.fillText(text.length > 20 ? text.slice(0, 20) + '...' : text, -it.w/2 + 16, -it.h/2 + 110);
+      
+      ctx.restore();
+    }
+
+    function draw(prog = animProgress) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      updateWidgetSizes();
+      drawBoardBackground(prog);
+
+      renderOrder.forEach(key => {
+        if (!wState[key]) return;
+        if (key === 'profile1') renderCriminalProfile(prog);
+        if (key === 'logConsole') renderTranscript(prog);
+        if (key === 'profile2') renderEvidencePhoto(prog);
+        if (key === 'warningBox') renderStickyNote(prog);
+      });
+
+      // 스냅 가이드라인
+      if ((draggingItem || draggingBackground) && !isExporting) {
+        if (snapGuides.x !== null) {
+          ctx.save(); ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+          ctx.beginPath(); ctx.moveTo(snapGuides.x, 0); ctx.lineTo(snapGuides.x, canvas.height); ctx.stroke(); ctx.restore();
+        }
+        if (snapGuides.y !== null) {
+          ctx.save(); ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+          ctx.beginPath(); ctx.moveTo(0, snapGuides.y); ctx.lineTo(canvas.width, snapGuides.y); ctx.stroke(); ctx.restore();
+        }
+      }
+
+      if (draggingItem && !isExporting) {
+        const it = elements[draggingItem];
+        ctx.save(); ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+        ctx.strokeRect(it.x - 2, it.y - 2, it.w + 4, it.h + 4); ctx.restore();
+      }
+    }
+
+    draw(0);
+    function startPreviewLoop() {
+      stopPreviewLoop();
+      previewTimer = setInterval(() => {
+        if (isExporting) return;
+        animProgress = (animProgress + 0.007) % 1; draw(animProgress);
+      }, 50);
+    }
+    function stopPreviewLoop() { if (previewTimer) { clearInterval(previewTimer); previewTimer = null; } }
+    startPreviewLoop();
+
+    // ================= 고화질 내보내기 =================
+    const btnGenerateGIF = document.getElementById('btnGenerateGIF');
+    const btnGenerateMP4 = document.getElementById('btnGenerateMP4');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const progressBar = document.getElementById('progressBar');
+    const statusMsg = document.getElementById('statusMsg');
+    const resultArea = document.getElementById('resultArea');
+    const previewMediaWrapper = document.getElementById('previewMediaWrapper');
+    const btnDownload = document.getElementById('btnDownload');
+    const btnShareX = document.getElementById('btnShareX');
+
+    btnGenerateGIF.addEventListener('click', () => {
+      isExporting = true; stopPreviewLoop();
+      btnGenerateGIF.disabled = true; btnGenerateMP4.disabled = true;
+      loadingStatus.classList.remove('hidden'); resultArea.classList.add('hidden');
+      progressBar.style.width = '15%'; statusMsg.textContent = 'GATHERING EVIDENCE...';
+
+      const frames = [];
+      for (let i = 0; i < 20; i++) { draw(i / 20); frames.push(canvas.toDataURL('image/jpeg', 0.9)); } 
+
+      progressBar.style.width = '45%'; statusMsg.textContent = 'ENCODING GIF...';
+      gifshot.createGIF({
+        images: frames, gifWidth: 960, gifHeight: 540, interval: 0.25, sampleInterval: 2, numWorkers: 2
+      }, function(obj) {
+        isExporting = false; startPreviewLoop();
+        btnGenerateGIF.disabled = false; btnGenerateMP4.disabled = false;
+        loadingStatus.classList.add('hidden');
+        if (!obj.error) {
+          previewMediaWrapper.innerHTML = `<img src="${obj.image}" class="w-full h-full object-cover">`;
+          btnDownload.href = obj.image; btnDownload.download = `dopa_internal_dossier.gif`;
+          resultArea.classList.remove('hidden'); resultArea.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    btnGenerateMP4.addEventListener('click', () => {
+      isExporting = true; stopPreviewLoop();
+      btnGenerateGIF.disabled = true; btnGenerateMP4.disabled = true;
+      loadingStatus.classList.remove('hidden'); resultArea.classList.add('hidden');
+      progressBar.style.width = '10%'; statusMsg.textContent = 'RECORDING TAPE...';
+
+      draw(0.0);
+      const stream = canvas.captureStream(30);
+      let mimeType = 'video/mp4';
+      if (!MediaRecorder.isTypeSupported('video/mp4')) mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      
+      let recorder;
+      try { recorder = new MediaRecorder(stream, { mimeType }); } catch (e) { recorder = new MediaRecorder(stream); }
+
+      const chunks = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'video/mp4' });
+        const videoUrl = URL.createObjectURL(blob);
+        previewMediaWrapper.innerHTML = `<video src="${videoUrl}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>`;
+        btnDownload.href = videoUrl; btnDownload.download = `dopa_internal_dossier.mp4`;
+        
+        isExporting = false; startPreviewLoop();
+        btnGenerateGIF.disabled = false; btnGenerateMP4.disabled = false;
+        loadingStatus.classList.add('hidden'); resultArea.classList.remove('hidden');
+        resultArea.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      recorder.start();
+      let currentFrame = 0; const totalSteps = 180;
+      const stepInterval = setInterval(() => {
+        draw(currentFrame / totalSteps); currentFrame++;
+        progressBar.style.width = `${Math.min(95, Math.round((currentFrame / totalSteps) * 100))}%`;
+        statusMsg.textContent = `COMPILING (${Math.round(currentFrame / 30)}/6s)...`;
+        if (currentFrame >= totalSteps) { clearInterval(stepInterval); recorder.stop(); }
+      }, 33);
+    });
+
+    btnShareX.addEventListener('click', () => {
+      const url = window.location.href;
+      const text = encodeURIComponent(`[TOP SECRET] 기밀 수사 조서 페어틀 📌\n#도파 #DOPA #페어틀 #수사물 #느와르 #혐관\n`);
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank');
+    });
+  </script>
+</body>
+</html>
